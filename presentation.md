@@ -30,4 +30,7 @@ layout: false
 ### [Brain Imaging Data Structure](http://bids.neuroimaging.io) (or BIDS)
 <img src="assets/data2bids.jpg" width="100%" />
 ---
+### Conversion from DICOM to BIDS
+
+  - [Heudiconv](https://github.com/nipy/heudiconv)
 # Questions
