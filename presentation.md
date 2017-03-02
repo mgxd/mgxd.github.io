@@ -11,6 +11,7 @@ layout: false
 - MRI as a research tool has been used for over two decades.
 
 --
+
 - Different types of MRI scans within studies
   - Anatomical
   - Diffusion
@@ -27,10 +28,20 @@ layout: false
   - separate tracking of specific metadata when processing dataset
   - no way to automatically validate completeness of dataset
 ---
-### [Brain Imaging Data Structure](http://bids.neuroimaging.io) (or BIDS)
+## [Brain Imaging Data Structure](http://bids.neuroimaging.io) (or BIDS)
 <img src="assets/data2bids.jpg" width="100%" />
 ---
+### So what do I need?
+
+- Full specification can be found [online](http://bids.neuroimaging.io/bids_spec1.0.0.pdf)
+
+--
+
+- [Online validator](http://incf.github.io/bids-validator) can easily check for you!
+  - For HPC - can also validate through command line
+
 ### Conversion from DICOM to BIDS
 
   - [Heudiconv](https://github.com/nipy/heudiconv)
-# Questions
+---
+# Questions?
