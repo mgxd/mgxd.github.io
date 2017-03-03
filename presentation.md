@@ -65,8 +65,10 @@ over 20 apps!
 
 - MRIQC
 - fMRIprep
-mn
-<img src="assets/t12mni.svg" width="100%" />
+
+<object type="image/svg+xml" data="assets/t12mni.svg" width="100%">
+Your browser does not support SVG 
+</object>
 
 ???
 
@@ -76,19 +78,17 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 ---
 ## Easiest way to convert to BIDS?
 
-- Convert current files
-
-or..
+- Convert current files or..
 --
-- Convert from dicoms!
 <img src="assets/heudiconv.png" width="100%" />
 --
   - [Heudiconv](https://github.com/nipy/heudiconv)
+--
     - `Python 2`
     - `Nipype`
     - `dcmstack`
     - `dcm2niix`
-
+--
   - Or if you have docker:
     - `docker pull nipy/heudiconv`
 ---
