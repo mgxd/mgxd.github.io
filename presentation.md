@@ -159,14 +159,14 @@ name: inverse
 layout: true
 class: center, inverse
 ---
-# Thanks
+# <u>Thanks</u>
 
 
-<h2> Satra Ghosh </h2>
+<h3> Satra Ghosh </h3>
 <br>
-<h2> Chris Gorgolewski </h2>
+<h3> Chris Gorgolewski </h3>
 <br>
-<h2> Heudiconv contributors </h2>
+<h3> Heudiconv contributors </h3>
 ---
 name: inverse
 layout: true
