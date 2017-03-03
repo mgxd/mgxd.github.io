@@ -65,9 +65,8 @@ over 20 apps!
 
 - MRIQC
 - fMRIprep
-
+--
 <object type="image/svg+xml" data="assets/t12mni.svg" width="100%">
-Your browser does not support SVG 
 </object>
 
 ???
@@ -81,14 +80,13 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 - Convert current files or..
 --
 <img src="assets/heudiconv.png" width="100%" />
---
   - [Heudiconv](https://github.com/nipy/heudiconv)
 --
     - `Python 2`
     - `Nipype`
     - `dcmstack`
     - `dcm2niix`
---
+
   - Or if you have docker:
     - `docker pull nipy/heudiconv`
 ---
@@ -105,11 +103,54 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 ### Check the generated info!
 
   - Once run, you should now have a directory with your subject, and a sub-directory `info`.
+
     - In there, you can see a `dicominfo.txt` - we'll be using the information here to convert to a file structure (BIDS)
 --
 
   <img src="assets/dicominfo.png" width="100%" />
+---
+### Put the guts in your heuristic!
+  - For this example, we want to extract T1, diffusion, and the face matching task
 
+--
+  - First, define the keys
+  ```
+  t1 = create_key('anat/sub-{subject}_T1w')
+  dwi = create_key('dwi/sub-{subject}_acq-{acq}_dwi')
+  facematch=create_key('func/sub-{subject}_task-facematch_run-{item:02d}_bold')
+  info = {t1:[], dwi:[], facematch:[]}
+  ```
+--
 
+  - And now for each key, look at the `dicominfo.txt` and set a unique criteria that only that series will meet. For example:
+--
+
+    ```
+    for idx, s in enumerate(seqinfo):
+        x,y,sl,nt = (s[6], s[7], s[8], s[9])
+        if (sl == 176) and (nt ==1) and ('T1_MPRAGE' in s[12]):
+            info[t1].append(s[2])
+    ```
+---
+### Test it out!
+  - After setting rules for each key, re-run `heudiconv` with some added parameters:
+
+--
+
+    - `-c dcm2niix` - this sets the converter that will be used (dcm2niix is recommended)
+    - `-f my_heuristic.py` - this tells heudiconv to look for the specific keys you defined when converting
+    - `-b` - this flag tells `dcm2niix` to output BIDS metadata `json` files.
+--
+
+  - Something missing? Double check your `heuristic.py` and `dicominfo.txt`!
+---
+### Is it BIDS yet?
+  - 90% there, but (currently) you will have to fix any errors from the validator.
+
+  - **BUT** a change to *heudiconv* should be coming soon that fixes most, if not all, of these problems.
+---
+name: inverse
+layout: true
+class: center, middle, inverse
 ---
 # Questions?
