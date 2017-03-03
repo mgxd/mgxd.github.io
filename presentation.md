@@ -161,11 +161,15 @@ class: center, inverse
 ---
 # Thanks
 
- - Satra Ghosh
- - Chris Gorgolewski
- - Heudiconv contributors
+
+<h2> Satra Ghosh </h2>
+<br>
+<h2> Chris Gorgolewski </h2>
+<br>
+<h2> Heudiconv contributors </h2>
 ---
 name: inverse
 layout: true
 class: center, middle, inverse
+---
 # Questions?
