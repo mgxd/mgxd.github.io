@@ -63,9 +63,11 @@ over 20 apps!
   - no hassle of installing/updating new versions
 --
 
-- MRIQC
-- fMRIprep
+- [MRIQC](https://github.com/poldracklab/mriqc)
+
+- [fMRIprep](https://github.com/poldracklab/fmriprep)
 --
+
 <object type="image/svg+xml" data="assets/t12mni.svg" width="100%">
 </object>
 
@@ -80,8 +82,10 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 - Convert current files or..
 --
 <img src="assets/heudiconv.png" width="100%" />
+
   - [Heudiconv](https://github.com/nipy/heudiconv)
 --
+
     - `Python 2`
     - `Nipype`
     - `dcmstack`
@@ -113,8 +117,9 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
   - For this example, we want to extract T1, diffusion, and the face matching task
 
 --
+
   - First, define the keys
-  ```
+  ```python
   t1 = create_key('anat/sub-{subject}_T1w')
   dwi = create_key('dwi/sub-{subject}_acq-{acq}_dwi')
   facematch=create_key('func/sub-{subject}_task-facematch_run-{item:02d}_bold')
@@ -125,7 +130,7 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
   - And now for each key, look at the `dicominfo.txt` and set a unique criteria that only that series will meet. For example:
 --
 
-    ```
+    ```python
     for idx, s in enumerate(seqinfo):
         x,y,sl,nt = (s[6], s[7], s[8], s[9])
         if (sl == 176) and (nt ==1) and ('T1_MPRAGE' in s[12]):
@@ -147,7 +152,7 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 ### Is it BIDS yet?
   - 90% there, but (currently) you will have to fix any errors from the validator.
 
-  - **BUT** a change to *heudiconv* should be coming soon that fixes most, if not all, of these problems.
+  - <h2>**BUT**</h2> a change to *heudiconv* should be coming soon that fixes most, if not all, of these problems.
 ---
 name: inverse
 layout: true
