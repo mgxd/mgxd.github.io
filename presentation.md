@@ -83,7 +83,7 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 --
 <img src="assets/heudiconv.png" width="100%" />
 
-  <p>[Heudiconv](https://github.com/nipy/heudiconv)</p>
+<p>[Heudiconv](https://github.com/nipy/heudiconv)</p>
 --
 
     - `Python 2`
@@ -91,7 +91,7 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
     - `dcmstack`
     - `dcm2niix`
 
-  - Or if you have docker: `docker pull nipy/heudiconv`
+Or if you have docker: `docker pull nipy/heudiconv`
 ---
 ### Sample conversion
 
@@ -151,12 +151,21 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 ### Is it BIDS yet?
   - 90% there, but (currently) you will have to fix any errors from the validator.
 
-<h2>**BUT**</h2>
+<h2>BUT</h2>
 
   - A change to `heudiconv` will be coming soon that fixes most, if not all, of these problems.
 ---
 name: inverse
 layout: true
-class: center, middle, inverse
+class: center, inverse
 ---
+# Thanks
+
+ - Satra Ghosh
+ - Chris Gorgolewski
+ - Heudiconv contributors
+---
+name: inverse
+layout: true
+class: center, middle, inverse
 # Questions?
