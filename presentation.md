@@ -83,8 +83,9 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 --
 <img src="assets/heudiconv.png" width="100%" />
 
-<p>[Heudiconv](https://github.com/nipy/heudiconv)</p>
 --
+
+<p>[Heudiconv](https://github.com/nipy/heudiconv)</p>
 
     - `Python 2`
     - `Nipype`
