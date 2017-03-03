@@ -52,9 +52,9 @@ run validator showing warnings/errors
 ### Now what?
 
 <img src="assets/bids-apps.png" width="100%" />
-
+---
 ### Conversion from DICOM to BIDS
-
+<img src="assets/heudiconv.png" />
   - [Heudiconv](https://github.com/nipy/heudiconv)
     - `Python 2`
     - `Nipype`
