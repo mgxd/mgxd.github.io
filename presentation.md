@@ -85,7 +85,7 @@ ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 
 --
 
-<p>[Heudiconv](https://github.com/nipy/heudiconv)</p>
+[Heudiconv](https://github.com/nipy/heudiconv)
 
     - `Python 2`
     - `Nipype`
