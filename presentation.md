@@ -2,39 +2,45 @@ name: inverse
 layout: true
 class: center, middle, inverse
 ---
-# Data Standards (BIDS) and conversion
+# From DICOM to a BIDS dataset
 ### mathiasg@mit.edu
 ---
 layout: false
-### Neuroimaging data is BIG
+## Roadmap
+#### - [Data and BIDS](#datamanage)
+#### - [Heudiconv](#heudiconv)
+#### - [Extra pieces](#extrasteps)
+#### - [BIDS-Apps](#bidsapps)
 
-- MRI as a research tool has been used for over two decades.
-
---
-
-- Different types of MRI scans within studies
-  - Anatomical
-  - Diffusion
-  - Functional
 ---
-### Managing this data
+name: datamanage
 
-- Lack of data storage/organization standard in neuroimaging community.
+### Data management
+
+- Large amounts of variety of scans acquired during acquisition
+ - Anatomical
+ - Functional
+ - Diffusion
+ - Field maps
+
+ --
+- Lack of data storage/organization standard in neuroimaging community
 
 --
 
 - This can lead to problems:
   - harder to share data (even in same lab)
   - separate tracking of specific metadata when processing dataset
-  - no way to automatically validate completeness of dataset
+  - is my dataset missing anything?
 ---
 ## [Brain Imaging Data Structure](http://bids.neuroimaging.io) (or BIDS)
 
 <img src="assets/data2bids.jpg" width="100%" />
 *Gorgolewski, K. J. et al. 2016*
+
 ???
 
-who came up with this? over 5000 researchers.
+result of collaboration from over 5000 researchers.
 ---
 ### So what do I need?
 
@@ -49,34 +55,8 @@ who came up with this? over 5000 researchers.
 
 run validator showing warnings/errors
 ---
-### Now what?
+name: heudiconv
 
-<img src="assets/bids-apps.png" width="100%" />
-
-???
-
-over 20 apps!
----
-### BIDS-Apps
-
-- Each app self-contained inside own docker image
-  - no hassle of installing/updating new versions
---
-
-- [MRIQC](https://github.com/poldracklab/mriqc)
-
-- [fMRIprep](https://github.com/poldracklab/fmriprep)
---
-
-<object type="image/svg+xml" data="assets/t12mni.svg" width="100%">
-</object>
-
-???
-
-mriqc - runs quality control measures on both structural and functional across either individual or group - outputs reports
-fMRIprep - runs basic preprocessing with reports generated outlining how import steps affected the data
-ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
----
 ## Easiest way to convert to BIDS?
 
 - Convert current files or..
@@ -149,6 +129,8 @@ Or if you have docker: `docker pull nipy/heudiconv`
 
   - Something missing? Double check your `heuristic.py` and `dicominfo.txt`!
 ---
+name: extrasteps
+
 ### Is it BIDS yet?
   - 90% there, but (currently) you will have to fix any errors from the validator.
 
@@ -159,6 +141,36 @@ Or if you have docker: `docker pull nipy/heudiconv`
 name: inverse
 layout: true
 class: center, inverse
+---
+### Now what?
+
+<img src="assets/bids-apps.png" width="100%" />
+
+???
+
+over 20 apps!
+---
+name: bidsapps
+
+### BIDS-Apps
+
+- Each app self-contained inside own docker image
+  - no hassle of installing/updating new versions
+--
+
+- [MRIQC](https://github.com/poldracklab/mriqc)
+
+- [fMRIprep](https://github.com/poldracklab/fmriprep)
+--
+
+<object type="image/svg+xml" data="assets/t12mni.svg" width="100%">
+</object>
+
+???
+
+mriqc - runs quality control measures on both structural and functional across either individual or group - outputs reports
+fMRIprep - runs basic preprocessing with reports generated outlining how import steps affected the data
+ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
 ---
 # <u>Thanks</u>
 
