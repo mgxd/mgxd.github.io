@@ -25,7 +25,7 @@ name: datamanage
  - Diffusion
  - Field maps
 
- --
+--
 - Lack of data storage/organization standard in neuroimaging community
 
 --
@@ -38,7 +38,7 @@ name: datamanage
 ## [Brain Imaging Data Structure](http://bids.neuroimaging.io) (or BIDS)
 
 <img src="assets/data2bids.jpg" width="100%" />
-*Gorgolewski, K. J. et al. 2016*
+<p align="right">*Gorgolewski, K. J. et al. 2016*</p>
 
 ???
 
@@ -48,22 +48,20 @@ result of collaboration from over 5000 researchers.
 name: heudiconv
 
 ## Easiest way to convert to BIDS?
-
-- Convert current files or..
---
+## [Heudiconv](https://github.com/nipy/heudiconv)
 <img src="assets/heudiconv.png" width="100%" />
 
 --
 
-[Heudiconv](https://github.com/nipy/heudiconv)
+- With docker, it's as easy as `docker pull nipy/heudiconv`
 
-    - `Python 2`
-    - `Nipype`
+--
+- Without docker, you'll need these requirements
+    - `python 2`
+    - `nipype`
     - `dcmstack`
     - `dcm2niix`
 
-Or if you have docker: `docker pull nipy/heudiconv`
----
 ### Sample conversion
 
   - Start out running heudiconv without any converter, just passing in dicoms.
