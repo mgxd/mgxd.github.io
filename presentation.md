@@ -5,7 +5,9 @@ class: center, middle, inverse
 # From DICOM to a BIDS dataset
 ### mathiasg@mit.edu
 ---
+name: content
 layout: false
+class: center, middle
 ## Roadmap
 #### - [Data and BIDS](#datamanage)
 #### - [Heudiconv](#heudiconv)
@@ -41,19 +43,7 @@ name: datamanage
 ???
 
 result of collaboration from over 5000 researchers.
----
-### So what do I need?
 
-- Full specification can be found [online](http://bids.neuroimaging.io/bids_spec1.0.0.pdf)
-
---
-
-- [In-browser validator](http://incf.github.io/bids-validator) can easily check for you!
-  - For HPC - can also validate through command line
-
-???
-
-run validator showing warnings/errors
 ---
 name: heudiconv
 
@@ -132,9 +122,14 @@ Or if you have docker: `docker pull nipy/heudiconv`
 name: extrasteps
 
 ### Is it BIDS yet?
-  - 90% there, but (currently) you will have to fix any errors from the validator.
 
-<h2>BUT</h2>
+- Let's check:
+  - [In-browser validator](http://incf.github.io/bids-validator)
+  - Also can validate through command line
+
+--
+
+
 
   - A change to `heudiconv` will be coming soon that fixes most, if not all, of these problems.
 ---
