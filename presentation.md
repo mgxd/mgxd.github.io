@@ -79,43 +79,37 @@ name: heudiconv
 name: conversion
 ### Sample conversion
 
+.middle[
 Start out running heudiconv without any converter, just passing in dicoms.
 
-.middle[
-.center[
 ```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 ```
-]
 ]
 
 ---
 ### Sample conversion
 
+.middle[
 Start out running heudiconv without any converter, just passing in dicoms.
 
-.middle[
-.center[
 ```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 -d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
 ```
 ]
-]
 
 ---
 ### Sample conversion
 
+.middle[
 Start out running heudiconv without any converter, just passing in dicoms.
 
-.middle[
-.center[
 ```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 -d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
 -f /convertall.py -c none -o /data/output
 ```
-]
 ]
 
 ---
@@ -168,6 +162,12 @@ def infotodict(seqinfo):
 - Let's extract T1, diffusion, and rest scans
 
 --
+ex.
+```python
+t1w = create_key('anat/sub-{subject}_T1w')
+```
+
+--
 
 ```python
 def infotodict(seqinfo):
@@ -199,9 +199,16 @@ for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
     x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
 ```
 
+---
+### Sequence Info
+
+  - And now for each key, we will look at the `dicominfo.txt` and set a unique criteria that only that scan will meet.
+
 --
 
 ```python
+for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
+    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
     if (sl == 176) and (nt ==1) and ('t1' in s[12]):
       info[t1w] = [s[2]] # assign if a single scan meets criteria
 ```
@@ -215,15 +222,23 @@ for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
     if (sl == 176) and (nt ==1) and ('t1' in s[12]):
       info[t1w] = [s[2]] # assign if a single scan meets criteria
 ```
+--
 
 - Notice there are two diffusion scans shown in dicom info
 
---
+---
+### Handling multiple runs
 
 ```python
+for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
+    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
+    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
+      info[t1w] = [s[2]] # assign if a single scan meets criteria
     if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
       info[dwi].append(s[2]) # append if multiple scans meet criteria
 ```
+
+- Notice there are two diffusion scans shown in dicom info
 
 ---
 ### Using custom formatting conditionally
@@ -237,17 +252,47 @@ for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
       info[dwi].append(s[2]) # append if multiple scans meet criteria
 ```
 
-- Extract and label if resting state scans are motion corrected
-
 --
 
+- Extract and label if resting state scans are motion corrected
+
+---
+### Using custom formatting conditionally
+
 ```python
+for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
+    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
+    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
+      info[t1w] = [s[2]] # assign if a single scan meets criteria
+    if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
+      info[dwi].append(s[2]) # append if multiple scans meet criteria
     if (nt > 10) and ('taskrest' in s[12]):
-        if s[13]: # motion corrected
-            info[rest].append({'item': s[2], 'acq': 'corrected'})
-        else: # not corrected
-            info[rest].append({'item': s[2], 'acq': 'uncorrected'})
+      if s[13]: # motion corrected
+        # catch
+      else:
+        # catch
 ```
+
+- Extract and label if resting state scans are motion corrected
+
+---
+### Using custom formatting conditionally
+
+```python
+for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
+    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
+    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
+      info[t1w] = [s[2]] # assign if a single scan meets criteria
+    if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
+      info[dwi].append(s[2]) # append if multiple scans meet criteria
+    if (nt > 10) and ('taskrest' in s[12]):
+      if s[13]: # motion corrected
+        info[rest].append({'item': s[2], 'acq': 'corrected'})
+      else:
+        info[rest].append({'item': s[2], 'acq': 'uncorrected'})
+```
+
+- Extract and label if resting state scans are motion corrected
 
 ---
 ### Our finished heuristic (`phantom_heuristic.py`)
@@ -286,52 +331,44 @@ def infotodict(seqinfo):
 ### Changing our docker command
 
 .middle[
-.center[
 ```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 -d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
 -f /convertall.py -c none -o /data/output
 ```
 ]
-]
 
 ---
 ### Changing our docker command
 
 .middle[
-.center[
 ```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 -d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
 -f /data/phantom_heuristic.py -c none -o /data/output
 ```
 ]
-]
 
 ---
 ### Changing our docker command
 
 .middle[
-.center[
 ```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 -d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
 -f /data/phantom_heuristic.py -c dcm2niix -o /data/output
 ```
 ]
-]
 
 ---
-### Changing our docker command
+### Updated docker command
 
 .middle[
-.center[
 ```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 -d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
 -f /data/phantom_heuristic.py -c dcm2niix -b -o /data/output
 ```
-]
 ]
 
 --
@@ -346,12 +383,12 @@ name: extrasteps
 ### Is it BIDS yet?
 
 Let's check:
-- [In-browser validator](http://incf.github.io/bids-validator)
-- Also can validate through command line
+- [In-browser validator](http://incf.github.io/bids-validator) / Command line
 
 --
 
 - A change to `heudiconv` will be coming soon that fixes most of these problems
+
  - However, event files and participants.tsv will still need to be created
 
 ---
@@ -363,9 +400,6 @@ name: nowwhat
 ???
 
 over 20 apps!
----
-
-???
 
 mriqc - runs quality control measures on both structural and functional across either individual or group - outputs reports
 fMRIprep - runs basic preprocessing with reports generated outlining how import steps affected the data
