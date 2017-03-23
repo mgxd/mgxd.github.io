@@ -13,11 +13,11 @@ layout: false
 
 .middle[
 .center[
-### - [Data and BIDS](#datamanage)
-### - [Heudiconv](#heudiconv)
-### - [Interactive Conversion](#conversion)
-### - [Extra pieces](#extrasteps)
-### - [BIDS-Apps](#bidsapps)
+### [Data and BIDS](#datamanage)
+### [Heudiconv](#heudiconv)
+### [Interactive Conversion](#conversion)
+### [Extra pieces](#extrasteps)
+### [BIDS-Apps](#bidsapps)
 ]
 ]
 
@@ -27,6 +27,7 @@ name: datamanage
 ### Data management
 
 - Large amounts of variety of scans acquired during acquisition
+
  - Anatomical
  - Functional
  - Diffusion
@@ -56,9 +57,9 @@ result of collaboration from over 5000 researchers.
 ---
 name: heudiconv
 
-## Easiest way to convert to BIDS?
+### Easiest way to convert to BIDS?
 
-### [Heudiconv](https://github.com/nipy/heudiconv)
+#### [Heudiconv](https://github.com/nipy/heudiconv)
 
 <img src="assets/heudiconv.png" width="100%" />
 
@@ -78,24 +79,28 @@ name: heudiconv
 name: conversion
 ### Sample conversion
 
-  - Start out running heudiconv without any converter, just passing in dicoms.
+Start out running heudiconv without any converter, just passing in dicoms.
+
 
 ```
-docker run --rm -it -v $PWD:/data nipy/heudiconv -d /data/%s/YAROSLAV_DBIC-TEST1/HEAD_ADVANCED_APPLICATIONS_LIBRARIES_20160824_104430_780000/*/*IMA -s PHANTOM1_3 -f /data/convertall.py -c none -o /data/output
+docker run --rm -it -v $PWD:/data nipy/heudiconv
+-d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
+-f /data/convertall.py -c none -o /data/output
 ```
 --
 
-    - Note: we are specifying `none` as our converter, and we'll be using the `convertall.py` boilerplate heuristic.
+  - Note: we are specifying `none` as our converter, and we'll be using the `convertall.py` boilerplate heuristic.
+
 ---
 ### Sample conversion
 
+.middle[
   - Once run, you should now have a directory with your subject, and a sub-directory `info`.
 
   - You can see a `dicominfo.txt` - we'll be using the information here to convert to a file structure (BIDS)
 
---
-
   - The full specifications for BIDS can be found [here](http://bids.neuroimaging.io/bids_spec1.0.1.pdf)
+]
 
 ---
 ### The heuristic file
@@ -103,12 +108,10 @@ docker run --rm -it -v $PWD:/data nipy/heudiconv -d /data/%s/YAROSLAV_DBIC-TEST1
 ```python
 import os
 
-
 def create_key(template, outtype=('nii.gz',), annotation_classes=None):
     if template is None or not template:
         raise ValueError('Template must be a valid format string')
     return template, outtype, annotation_classes
-
 
 def infotodict(seqinfo):
     """Heuristic evaluator for determining which runs belong where
@@ -131,11 +134,11 @@ def infotodict(seqinfo):
     return info
 ```
 ---
-### Creating keys
+### Creating heuristic keys
 
 - Keys define type of scan
 
-- Let's extract T1, diffusion, and rest
+- Let's extract T1, diffusion, and rest scans
 
 --
 
@@ -153,7 +156,7 @@ def infotodict(seqinfo):
     # paths done in BIDS format
     t1w = create_key('anat/sub-{subject}_T1w')
     dwi = create_key('dwi/sub-{subject}_run-{item:01d}_dwi')
-    rest = create_key('func/sub-{subject}_task-rest_run-{item:01d}_bold')
+    rest = create_key('func/sub-{subject}_task-rest_acq-{acq}_run-{item:01d}_bold')
 
     info = {t1w: [], dwi: [], rest: []}
 ```
@@ -164,21 +167,109 @@ def infotodict(seqinfo):
 
 --
 
-    ```python
-    for idx, s in enumerate(seqinfo):
-        x,y,sl,nt = (s[6], s[7], s[8], s[9])
-        if (sl == 176) and (nt ==1) and ('T1_MPRAGE' in s[12]):
-            info[t1].append(s[2])
-    ```
----
-### Test it out!
-  - After setting rules for each key, re-run `heudiconv` with some added parameters:
+```python
+for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
+    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
+```
 
 --
 
-    - `-c dcm2niix` - this sets the converter that will be used (dcm2niix is recommended)
-    - `-f my_heuristic.py` - this tells heudiconv to look for the specific keys you defined when converting
-    - `-b` - this flag tells `dcm2niix` to output BIDS metadata `json` files.
+```python
+    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
+      info[t1w] = [s[2]] # assign if a single scan meets criteria
+```
+
+---
+### Handling multiple runs
+
+```python
+for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
+    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
+    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
+      info[t1w] = [s[2]] # assign if a single scan meets criteria
+```
+
+- Notice there are two diffusion scans shown in dicom info
+
+--
+
+```python
+    if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
+      info[dwi].append(s[2]) # append if multiple scans meet criteria
+```
+
+---
+### Using custom formatting
+
+```python
+for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
+    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
+    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
+      info[t1w] = [s[2]] # assign if a single scan meets criteria
+    if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
+      info[dwi].append(s[2]) # append if multiple scans meet criteria
+```
+
+- Extract and label if resting state scans are motion corrected
+
+--
+
+```python
+    if (nt > 10) and ('taskrest' in s[12]):
+        if s[13]:
+            info[rest].append({'item': s[2], 'acq': 'corrected'})
+        else:
+            info[rest].append({'item': s[2], 'acq': 'uncorrected'})
+```
+
+---
+### Our finished heuristic
+
+```python
+import os
+
+def create_key(template, outtype=('nii.gz',), annotation_classes=None):
+    if template is None or not template:
+        raise ValueError('Template must be a valid format string')
+    return template, outtype, annotation_classes
+
+def infotodict(seqinfo):
+
+    t1w = create_key('anat/sub-{subject}_T1w')
+    dwi = create_key('dwi/sub-{subject}_run-{item:01d}_dwi')
+    rest = create_key('func/sub-{subject}_task-rest_acq-{acq}_run-{item:01d}_bold')
+
+    info = {t1w: [], dwi: [], rest: []}
+
+    for s in seqinfo:
+        x, y, sl, nt = (s[6], s[7], s[8], s[9])
+        if (sl == 176) and (nt ==1) and ('t1' in s[12]):
+          info[t1w] = [s[2]] # assign if a single series meets criteria
+        if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
+          info[dwi].append(s[2]) # append if multiple series meet criteria
+        if (nt > 10) and ('taskrest' in s[12]):
+            if s[13]: # exclude non motion corrected series
+                info[rest].append({'item': s[2], 'acq': 'corrected'})
+            else:
+                info[rest].append({'item': s[2], 'acq': 'uncorrected'})
+    return info
+```
+
+.bottom[save it as `phantom_heuristic.py`]
+
+---
+# The real conversion
+
+```
+docker run --rm -it -v $PWD:/data nipy/heudiconv
+-d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
+-f /data/phantom_heuristic.py -c dcm2niix -b -o /data/output
+```
+
+    - `-c dcm2niix` - sets the converter
+    - `-f phantom_heuristic.py` - your freshly made heuristic
+    - `-b` - flag to make `dcm2niix` output `json` files with additional metadata (BIDS)
+
 --
 
   - Something missing? Double check your `heuristic.py` and `dicominfo.txt`!
