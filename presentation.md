@@ -4,15 +4,22 @@ class: center, middle, inverse
 ---
 # From DICOM to a BIDS dataset
 ### mathiasg@mit.edu
+
 ---
 name: content
 layout: false
-class: center, middle
+
 ## Roadmap
-#### - [Data and BIDS](#datamanage)
-#### - [Heudiconv](#heudiconv)
-#### - [Extra pieces](#extrasteps)
-#### - [BIDS-Apps](#bidsapps)
+
+.middle[
+.center[
+### - [Data and BIDS](#datamanage)
+### - [Heudiconv](#heudiconv)
+### - [Interactive Conversion](#conversion)
+### - [Extra pieces](#extrasteps)
+### - [BIDS-Apps](#bidsapps)
+]
+]
 
 ---
 name: datamanage
@@ -26,6 +33,7 @@ name: datamanage
  - Field maps
 
 --
+
 - Lack of data storage/organization standard in neuroimaging community
 
 --
@@ -38,7 +46,8 @@ name: datamanage
 ## [Brain Imaging Data Structure](http://bids.neuroimaging.io) (or BIDS)
 
 <img src="assets/data2bids.jpg" width="100%" />
-<p align="right">*Gorgolewski, K. J. et al. 2016*</p>
+.right[*Gorgolewski, K. J. et al. 2016*]
+
 
 ???
 
@@ -48,7 +57,9 @@ result of collaboration from over 5000 researchers.
 name: heudiconv
 
 ## Easiest way to convert to BIDS?
-## [Heudiconv](https://github.com/nipy/heudiconv)
+
+### [Heudiconv](https://github.com/nipy/heudiconv)
+
 <img src="assets/heudiconv.png" width="100%" />
 
 --
@@ -56,46 +67,101 @@ name: heudiconv
 - With docker, it's as easy as `docker pull nipy/heudiconv`
 
 --
+
 - Without docker, you'll need these requirements
-    - `python 2`
+    - `python 2.7`
     - `nipype`
     - `dcmstack`
     - `dcm2niix`
 
+---
+name: conversion
 ### Sample conversion
 
   - Start out running heudiconv without any converter, just passing in dicoms.
-  ```
-  heudiconv -d $DICOMPATH/%s/*.dcm -f convertall.py -c none -s $YOUR_SUBJECT
-  ```
+
+```
+docker run --rm -it -v $PWD:/data nipy/heudiconv -d /data/%s/YAROSLAV_DBIC-TEST1/HEAD_ADVANCED_APPLICATIONS_LIBRARIES_20160824_104430_780000/*/*IMA -s PHANTOM1_3 -f /data/convertall.py -c none -o /data/output
+```
 --
 
-    - Note: we are not designating a converter yet, but we'll be using the `convertall.py` found in the sample heuristics.
+    - Note: we are specifying `none` as our converter, and we'll be using the `convertall.py` boilerplate heuristic.
 ---
-### Check the generated info!
+### Sample conversion
 
   - Once run, you should now have a directory with your subject, and a sub-directory `info`.
 
-    - In there, you can see a `dicominfo.txt` - we'll be using the information here to convert to a file structure (BIDS)
+  - You can see a `dicominfo.txt` - we'll be using the information here to convert to a file structure (BIDS)
+
 --
 
-  <img src="assets/dicominfo.png" width="100%" />
+  - The full specifications for BIDS can be found [here](http://bids.neuroimaging.io/bids_spec1.0.1.pdf)
+
 ---
-### Put the guts in your heuristic!
-  - For this example, we want to extract T1, diffusion, and the face matching task
+### The heuristic file
+
+```python
+import os
+
+
+def create_key(template, outtype=('nii.gz',), annotation_classes=None):
+    if template is None or not template:
+        raise ValueError('Template must be a valid format string')
+    return template, outtype, annotation_classes
+
+
+def infotodict(seqinfo):
+    """Heuristic evaluator for determining which runs belong where
+
+    allowed template fields - follow python string module:
+
+    item: index within category
+    subject: participant id
+    seqitem: run number during scanning
+    subindex: sub index within group
+    """
+
+    data = create_key('run{item:03d}', outtype=('nii.gz',))
+    info = {data: []}
+    last_run = len(seqinfo)
+    for s in seqinfo:
+        # TODO: clean it up -- unused stuff laying around
+        x, y, sl, nt = (s[6], s[7], s[8], s[9])
+        info[data].append(s[2])
+    return info
+```
+---
+### Creating keys
+
+- Keys define type of scan
+
+- Let's extract T1, diffusion, and rest
 
 --
 
-  - First, define the keys
-  ```python
-  t1 = create_key('anat/sub-{subject}_T1w')
-  dwi = create_key('dwi/sub-{subject}_acq-{acq}_dwi')
-  facematch=create_key('func/sub-{subject}_task-facematch_run-{item:02d}_bold')
-  info = {t1:[], dwi:[], facematch:[]}
-  ```
---
+```python
+def infotodict(seqinfo):
+    """Heuristic evaluator for determining which runs belong where
 
-  - And now for each key, look at the `dicominfo.txt` and set a unique criteria that only that series will meet. For example:
+    allowed template fields - follow python string module:
+
+    item: index within category
+    subject: participant id
+    seqitem: run number during scanning
+    subindex: sub index within group
+    """
+    # paths done in BIDS format
+    t1w = create_key('anat/sub-{subject}_T1w')
+    dwi = create_key('dwi/sub-{subject}_run-{item:01d}_dwi')
+    rest = create_key('func/sub-{subject}_task-rest_run-{item:01d}_bold')
+
+    info = {t1w: [], dwi: [], rest: []}
+```
+---
+### Sequence Info
+
+  - And now for each key, we will look at the `dicominfo.txt` and set a unique criteria that only that scan will meet.
+
 --
 
     ```python
