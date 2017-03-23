@@ -8,7 +8,6 @@ class: center, middle, inverse
 ---
 name: content
 layout: false
-
 ## Roadmap
 
 .middle[
@@ -204,7 +203,6 @@ for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
 
   - And now for each key, we will look at the `dicominfo.txt` and set a unique criteria that only that scan will meet.
 
---
 
 ```python
 for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
@@ -389,7 +387,7 @@ Let's check:
 
 - A change to `heudiconv` will be coming soon that fixes most of these problems
 
- - However, event files and participants.tsv will still need to be created
+ - However, [event files](https://github.com/INCF/BIDS-examples/blob/master/ds001/sub-02/func/sub-02_task-balloonanalogrisktask_run-01_events.tsv) and [participants.tsv](https://github.com/INCF/BIDS-examples/blob/master/ds001/participants.tsv) will still need to be created
 
 ---
 name: nowwhat
