@@ -17,7 +17,7 @@ layout: false
 ### [Heudiconv](#heudiconv)
 ### [Interactive Conversion](#conversion)
 ### [Extra pieces](#extrasteps)
-### [BIDS-Apps](#bidsapps)
+### [BIDS-Apps](#nowwhat)
 ]
 ]
 
@@ -81,25 +81,52 @@ name: conversion
 
 Start out running heudiconv without any converter, just passing in dicoms.
 
-
+.middle[
+.center[
+```bash
+docker run --rm -it -v $PWD:/data nipy/heudiconv
 ```
+]
+]
+
+---
+### Sample conversion
+
+Start out running heudiconv without any converter, just passing in dicoms.
+
+.middle[
+.center[
+```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 -d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
--f /data/convertall.py -c none -o /data/output
 ```
---
+]
+]
 
-  - Note: we are specifying `none` as our converter, and we'll be using the `convertall.py` boilerplate heuristic.
+---
+### Sample conversion
+
+Start out running heudiconv without any converter, just passing in dicoms.
+
+.middle[
+.center[
+```bash
+docker run --rm -it -v $PWD:/data nipy/heudiconv
+-d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
+-f /convertall.py -c none -o /data/output
+```
+]
+]
 
 ---
 ### Sample conversion
 
 .middle[
-  - Once run, you should now have a directory with your subject, and a sub-directory `info`.
+Once run, you should now have a directory with your subject, and a sub-directory `info`.
 
-  - You can see a `dicominfo.txt` - we'll be using the information here to convert to a file structure (BIDS)
+- You can see a `dicominfo.txt` - we'll be using the information here to convert to a file structure (BIDS)
 
-  - The full specifications for BIDS can be found [here](http://bids.neuroimaging.io/bids_spec1.0.1.pdf)
+- The full specifications for BIDS can be found [here](http://bids.neuroimaging.io/bids_spec1.0.1.pdf)
 ]
 
 ---
@@ -199,7 +226,7 @@ for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
 ```
 
 ---
-### Using custom formatting
+### Using custom formatting conditionally
 
 ```python
 for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
@@ -216,14 +243,14 @@ for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
 
 ```python
     if (nt > 10) and ('taskrest' in s[12]):
-        if s[13]:
+        if s[13]: # motion corrected
             info[rest].append({'item': s[2], 'acq': 'corrected'})
-        else:
+        else: # not corrected
             info[rest].append({'item': s[2], 'acq': 'uncorrected'})
 ```
 
 ---
-### Our finished heuristic
+### Our finished heuristic (`phantom_heuristic.py`)
 
 ```python
 import os
@@ -255,43 +282,80 @@ def infotodict(seqinfo):
     return info
 ```
 
-.bottom[save it as `phantom_heuristic.py`]
+---
+### Changing our docker command
+
+.middle[
+.center[
+```bash
+docker run --rm -it -v $PWD:/data nipy/heudiconv
+-d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
+-f /convertall.py -c none -o /data/output
+```
+]
+]
 
 ---
-# The real conversion
+### Changing our docker command
 
+.middle[
+.center[
+```bash
+docker run --rm -it -v $PWD:/data nipy/heudiconv
+-d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
+-f /data/phantom_heuristic.py -c none -o /data/output
 ```
+]
+]
+
+---
+### Changing our docker command
+
+.middle[
+.center[
+```bash
+docker run --rm -it -v $PWD:/data nipy/heudiconv
+-d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
+-f /data/phantom_heuristic.py -c dcm2niix -o /data/output
+```
+]
+]
+
+---
+### Changing our docker command
+
+.middle[
+.center[
+```bash
 docker run --rm -it -v $PWD:/data nipy/heudiconv
 -d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
 -f /data/phantom_heuristic.py -c dcm2niix -b -o /data/output
 ```
-
-    - `-c dcm2niix` - sets the converter
-    - `-f phantom_heuristic.py` - your freshly made heuristic
-    - `-b` - flag to make `dcm2niix` output `json` files with additional metadata (BIDS)
+]
+]
 
 --
 
-  - Something missing? Double check your `heuristic.py` and `dicominfo.txt`!
+- Clear old output directory
+- Run the docker command!
+- Something missing? Double check your `heuristic` and `dicominfo.txt`!
+
 ---
 name: extrasteps
 
 ### Is it BIDS yet?
 
-- Let's check:
-  - [In-browser validator](http://incf.github.io/bids-validator)
-  - Also can validate through command line
+Let's check:
+- [In-browser validator](http://incf.github.io/bids-validator)
+- Also can validate through command line
 
 --
 
+- A change to `heudiconv` will be coming soon that fixes most of these problems
+ - However, event files and participants.tsv will still need to be created
 
-
-  - A change to `heudiconv` will be coming soon that fixes most, if not all, of these problems.
 ---
-name: inverse
-layout: true
-class: center, inverse
----
+name: nowwhat
 ### Now what?
 
 <img src="assets/bids-apps.png" width="100%" />
@@ -300,36 +364,13 @@ class: center, inverse
 
 over 20 apps!
 ---
-name: bidsapps
-
-### BIDS-Apps
-
-- Each app self-contained inside own docker image
-  - no hassle of installing/updating new versions
---
-
-- [MRIQC](https://github.com/poldracklab/mriqc)
-
-- [fMRIprep](https://github.com/poldracklab/fmriprep)
---
-
-<object type="image/svg+xml" data="assets/t12mni.svg" width="100%">
-</object>
 
 ???
 
 mriqc - runs quality control measures on both structural and functional across either individual or group - outputs reports
 fMRIprep - runs basic preprocessing with reports generated outlining how import steps affected the data
 ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
----
-# <u>Thanks</u>
 
-
-<h3> Satra Ghosh </h3>
-<br>
-<h3> Chris Gorgolewski </h3>
-<br>
-<h3> Heudiconv contributors </h3>
 ---
 name: inverse
 layout: true
