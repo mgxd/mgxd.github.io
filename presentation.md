@@ -21,7 +21,9 @@ layout: false
 ## Prerequisites
 
 * `docker pull nipype/workshops:latest-base`
+
 * `docker pull nipy/heudiconv`
+
 * `jupyter notebook` (for nice viewing)
 
 --
@@ -131,6 +133,7 @@ docker run --rm -it -v $PWD:/data nipy/heudiconv
 ]
 
 ---
+layout: false
 ### Sample conversion
 
 Once run, you should now have a directory with your subject, and a sub-directory `info`.
@@ -140,7 +143,6 @@ Once run, you should now have a directory with your subject, and a sub-directory
 - The full specifications for BIDS can be found [here](http://bids.neuroimaging.io/bids_spec1.0.1.pdf)
 
 ---
-layout: false
 ### The heuristic file
 
 ```python
@@ -344,9 +346,6 @@ def infotodict(seqinfo):
 ```
 
 ---
-class: center, middle
-layout: true
----
 ### Changing our docker command
 
 ```bash
@@ -390,7 +389,6 @@ docker run --rm -it -v $PWD:/data nipy/heudiconv
 
 ---
 name: extrasteps
-layout: false
 
 ### Is it BIDS yet?
 
