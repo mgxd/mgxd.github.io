@@ -2,148 +2,133 @@ name: inverse
 layout: true
 class: center, middle, inverse
 ---
-# From DICOM to a BIDS dataset
-### mathiasg@mit.edu
+# Heudiconv
+### Coastal Coding 2019
 
 ---
-name: content
-class: center, middle
-layout: false
-## Roadmap
-
-### [Data and BIDS](#datamanage)
-### [Heudiconv](#heudiconv)
-### [Interactive Conversion](#conversion)
-### [Extra pieces](#extrasteps)
-### [BIDS-Apps](#nowwhat)
-
----
-## Prerequisites
-
-* `docker pull nipype/workshops:latest-base`
-
-* `docker pull nipy/heudiconv`
-
-* `jupyter notebook` (for nice viewing)
-
---
-
-* Grab the data (using datalad!)
-
-```
-$ docker run -it --rm -v $PWD:/data nipype/workshops:latest-base bash
-# Inside container
-> git clone http://datasets.datalad.org/test/dartmouth-siemens/PHANTOM1_3/.git
-> cd PHANTOM1_3
-> datalad get -J6 YAROSLAV_DBIC-TEST1/
-> exit
-```
-
----
-
-name: datamanage
-
-### Data management
-
-- Large amounts of variety of scans acquired during acquisition
-
- - Anatomical
- - Functional
- - Diffusion
- - Field maps
-
---
-
-- Lack of data storage/organization standard in neuroimaging community
-
---
-
-- This can lead to problems:
-  - harder to share data (even in same lab)
-  - separate tracking of specific metadata when processing dataset
-  - is my dataset missing anything?
----
-## [Brain Imaging Data Structure](http://bids.neuroimaging.io) (or BIDS)
-
-<img src="assets/data2bids.jpg" width="100%" />
-.right[*Gorgolewski, K. J. et al. 2016*]
-
-
-???
-
-result of collaboration from over 5000 researchers.
-
----
-name: heudiconv
-
-### Easiest way to convert to BIDS?
-
-#### [Heudiconv](https://github.com/nipy/heudiconv)
-
-<img src="assets/heudiconv.png" width="100%" />
-
---
-
-- With docker, it's as easy as `docker pull nipy/heudiconv`
-
---
-
-- Without docker, you'll need these requirements
-    - `python 2.7`
-    - `nipype`
-    - `dcmstack`
-    - `dcm2niix`
-
----
-class: center
+class: middle
 layout: true
 ---
-name: conversion
-### Sample conversion
+## Heudi-what?
 
-Start out running heudiconv without any converter, just passing in dicoms.
+- `Heudiconv` is a Python library to facilitate conversion of DICOM files to NIfTI.
+- Highly customizable, but can be set conform to existing data standards (BIDS).
+- Integration with `DataLad` allows for easy versioning and sharing of data!
 
-```bash
-docker run --rm -it -v $PWD:/data nipy/heudiconv
+---
+## Tutorial and Requirements
+
+- In this live tutorial, we will be using publicly
+ available DICOM data and
+ converting with `Heudiconv`. The data comes
+ preloaded in the Docker image, but
+ can be fetched easily with `DataLad`.
+
+** To ensure you can follow along, please check
+ that you have:
+* Docker + `mgxd/heudiconv:cc19-demo` image
+
+---
+### Setup
+
+- By default, running the container will trigger a
+ `heudiconv` build. We will override this and enter
+ the container interactively with the following
+ command:
+
+```
+docker run --rm -it --entrypoint=bash mgxd/heudiconv:cc19-demo
+```
+
+- To test you are in the proper environment, try
+ running the following commands
+
+```
+heudiconv --version;
+ls /examples;
 ```
 
 ---
-### Sample conversion
+### Usage
 
-.middle[
-Start out running heudiconv without any converter, just passing in dicoms.
+Here are a few basic `heudiconv` flags to be familiar with:
+
+* First, pick one of these flags to input data
+  - `--files` : Files (tarballs, dicoms) or
+   directories containing files to process.
+  - `-d, --dicom_dir_template` : string path
+   to DICOMs. Requires "{subject}" formatting
+   within path.
+     - `-s, --subjects` : one or more subjects to
+     substitute to path in `--dicom_dir_template`
+
+* `-f, --heuristic` : Python script used to set
+  conversion rules.
+* `-o, --outdir` : Location to store output
+
+### Reproin - for the ~~lazy~~ easy converter
+
+- `Heudiconv` includes a variety of built-in
+ heuristics (`heudiconv --command heuristics`)
+
+- The [`reproin`](https://github.com/nipy/heudiconv/blob/master/heudiconv/heuristics/reproin.py) heuristic is an effort to automate
+ DICOM conversions straight to compliant (but not
+ complete) BIDS datasets*.
+  - Requires scanner sequences to be structured in
+   a particular format
+
+---
+### Reproin - for the ~~lazy~~ easy converter
+
+- Lets use some data that was already structured in
+ the reproin format
+
+ ```bash
+ heudiconv --files /examples/phantom-1 -f reproin -o /output --bids
+ ```
+
+- Check validity of the conversion
+ ```bash
+ bids-validator /output/Halchenko/Yarik/950_bids_test4/
+ ```
+
+ ---
+### Custom Conversion
+
+- What if you are working with data that was not
+ structured to `reproin` on the scanner?
+
+- We'll just have to make our own structure / rules!
+
+- We will run `heudiconv` twice:
+  - dry pass (no conversion), which will stack
+   and group the DICOMs into series. This step will
+   let us view information per series and define
+   rules.
+   - conversion, as we saw with the `reproin`
+
+---
+### Custom Conversion
 
 ```bash
-docker run --rm -it -v $PWD:/data nipy/heudiconv
--d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
+heudiconv -d "/examples/{subject}/*/*/*/*IMA" -s PHANTOM1_3 -c none -f convertall -o /output2
 ```
-]
+
+Run the command!
 
 ---
 ### Sample conversion
 
-.middle[
-Start out running heudiconv without any converter, just passing in dicoms.
+- After running the command, there will be a
+ hidden folder within output directory to keep track of metadata. `/output/.heudiconv/`.
 
-```bash
-docker run --rm -it -v $PWD:/data nipy/heudiconv
--d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
--f /convertall.py -c none -o /data/output
-```
-]
+- Within `.heudiconv`, there will be a directory
+ with your subject ID, and a subdirectory `info`. Inside this, you can see a `dicominfo.tsv` - we'll be using the information here to convert to a file structure (BIDS)
+
+- Let's visualize the `dicominfo`.
 
 ---
-layout: false
-### Sample conversion
-
-Once run, you should now have a directory with your subject, and a sub-directory `info`.
-
-- You can see a `dicominfo.txt` - we'll be using the information here to convert to a file structure (BIDS)
-
-- The full specifications for BIDS can be found [here](http://bids.neuroimaging.io/bids_spec1.0.1.pdf)
-
----
-### The heuristic file
+### Dive into a heuristic file
 
 ```python
 import os
@@ -162,17 +147,51 @@ def infotodict(seqinfo):
     subject: participant id
     seqitem: run number during scanning
     subindex: sub index within group
+    session: ses-[sessionID]
+    bids_subject_session_dir: BIDS subject/session directory
+    bids_subject_session_prefix: BIDS subject/session prefix
     """
 
-    data = create_key('run{item:03d}', outtype=('nii.gz',))
+    data = create_key('run{item:03d}')
+
     info = {data: []}
-    last_run = len(seqinfo)
+
     for s in seqinfo:
-        # TODO: clean it up -- unused stuff laying around
-        x, y, sl, nt = (s[6], s[7], s[8], s[9])
-        info[data].append(s[2])
+        """
+        The namedtuple `s` contains the following fields:
+
+        * total_files_till_now
+        * example_dcm_file
+        * series_id
+        * dcm_dir_name
+        * unspecified2
+        * unspecified3
+        * dim1
+        * dim2
+        * dim3
+        * dim4
+        * TR
+        * TE
+        * protocol_name
+        * is_motion_corrected
+        * is_derived
+        * patient_id
+        * study_description
+        * referring_physician_name
+        * series_description
+        * sequence_name
+        * image_type
+        * accession_number
+        * patient_age
+        * patient_sex
+        * date
+        * series_uid
+
+        """
+        info[data].append(s.series_id)
     return info
 ```
+
 ---
 ### Creating heuristic keys
 
@@ -181,9 +200,9 @@ def infotodict(seqinfo):
 - Let's extract T1, diffusion, and rest scans
 
 --
-ex.
+
 ```python
-t1w = create_key('anat/sub-{subject}_T1w')
+t1w = create_key('sub-{subject}/anat/sub-{subject}_T1w')
 ```
 
 --
@@ -200,120 +219,109 @@ def infotodict(seqinfo):
     subindex: sub index within group
     """
     # paths done in BIDS format
-    t1w = create_key('anat/sub-{subject}_T1w')
-    dwi = create_key('dwi/sub-{subject}_run-{item:01d}_dwi')
-    rest = create_key('func/sub-{subject}_task-rest_acq-{acq}_run-{item:01d}_bold')
+    t1w = create_key('sub-{subject}/anat/sub-{subject}_T1w')
+    dwi = create_key('sub-{subject}/dwi/sub-{subject}_run-{item:01d}_dwi')
+    rest = create_key('sub-{subject}/func/sub-{subject}_task-rest_rec-{rec}_run-{item:01d}_bold')
 
     info = {t1w: [], dwi: [], rest: []}
 ```
 ---
 ### Sequence Info
 
-  - And now for each key, we will look at the `dicominfo.txt` and set a unique criteria that only that scan will meet.
+  - And now for each key, we will look at the `dicominfo.tsv` and set a unique criteria that only that scan will meet.
 
---
 
 ```python
-for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
-    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
+for idx, s in enumerate(seqinfo):
+   # s is a namedtuple with fields equal to the names of the columns
+   # found in the dicominfo.txt file
 ```
 
 ---
 ### Sequence Info
 
-  - And now for each key, we will look at the `dicominfo.txt` and set a unique criteria that only that scan will meet.
+  - And now for each key, we will look at the `dicominfo.tsv` and set a unique criteria that only that scan will meet.
 
 
 ```python
-for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
-    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
-    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
-      info[t1w] = [s[2]] # assign if a single scan meets criteria
+for idx, s in enumerate(seqinfo): # each row of dicominfo.tsv
+    if (s.dim3 == 176) and (s.dim4 == 1) and ('t1' in s.protocol_name):
+      info[t1w] = [s.series_id] # assign if a single scan meets criteria
 ```
 
 ---
 ### Handling multiple runs
 
 ```python
-for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
-    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
-    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
-      info[t1w] = [s[2]] # assign if a single scan meets criteria
+for idx, s in enumerate(seqinfo): # each row of dicominfo.tsv
+    if (s.dim3 == 176) and (s.dim4 == 1) and ('t1' in s.protocol_name):
+      info[t1w] = [s.series_id] # assign if a single scan meets criteria
 ```
 --
 
-- Notice there are two diffusion scans shown in dicom info
+- Notice there are two diffusion scans shown in DICOM info
 
 ---
 ### Handling multiple runs
 
 ```python
-for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
-    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
-    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
-      info[t1w] = [s[2]] # assign if a single scan meets criteria
-    if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
-      info[dwi].append(s[2]) # append if multiple scans meet criteria
+for idx, s in enumerate(seqinfo): # each row of dicominfo.tsv
+    if (s.dim3 == 176) and (s.dim4 == 1) and ('t1' in s.protocol_name):
+      info[t1w] = [s.series_id] # assign if a single scan meets criteria
+    if (11 <= s.dim3 <= 22) and (s.dim4 == 1) and ('dti' in s.protocol_name):
+      info[dwi].append(s.series_id) # append if multiple scans meet criteria
 ```
 
-- Notice there are two diffusion scans shown in dicom info
+- Notice there are two diffusion scans shown in DICOM info
 
 ---
 ### Using custom formatting conditionally
 
 ```python
-for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
-    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
-    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
-      info[t1w] = [s[2]] # assign if a single scan meets criteria
-    if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
-      info[dwi].append(s[2]) # append if multiple scans meet criteria
+for idx, s in enumerate(seqinfo): # each row of dicominfo.tsv
+    if (s.dim3 == 176) and (s.dim4 == 1) and ('t1' in s.protocol_name):
+      info[t1w] = [s.series_id] # assign if a single scan meets criteria
+    if (11 <= s.dim3 <= 22) and (s.dim4 == 1) and ('dti' in s.protocol_name):
+      info[dwi].append(s.series_id) # append if multiple scans meet criteria
 ```
 
 --
 
-- Extract and label if resting state scans are motion corrected
+- Extract and label if resting state scans are not motion corrected
 
 ---
 ### Using custom formatting conditionally
 
 ```python
-for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
-    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
-    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
-      info[t1w] = [s[2]] # assign if a single scan meets criteria
-    if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
-      info[dwi].append(s[2]) # append if multiple scans meet criteria
-    if (nt > 10) and ('taskrest' in s[12]):
-      if s[13]: # motion corrected
-        # catch
-      else:
-        # catch
+for idx, s in enumerate(seqinfo): # each row of dicominfo.tsv
+    if (s.dim3 == 176) and (s.dim4 == 1) and ('t1' in s.protocol_name):
+      info[t1w] = [s.series_id] # assign if a single scan meets criteria
+    if (11 <= s.dim3 <= 22) and (s.dim4 == 1) and ('dti' in s.protocol_name):
+      info[dwi].append(s.series_id) # append if multiple scans meet criteria
+    if (s.dim4 > 10) and ('taskrest' in s.protocol_name):
+      if not s.is_motion_corrected: # not motion corrected
 ```
 
-- Extract and label if resting state scans are motion corrected
+- Extract and label if resting state scans are not motion corrected
 
 ---
 ### Using custom formatting conditionally
 
 ```python
-for idx, s in enumerate(seqinfo): # each row of dicominfo.txt
-    x,y,sl,nt = (s[6], s[7], s[8], s[9]) # the 4 dim columns
-    if (sl == 176) and (nt ==1) and ('t1' in s[12]):
-      info[t1w] = [s[2]] # assign if a single scan meets criteria
-    if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
-      info[dwi].append(s[2]) # append if multiple scans meet criteria
-    if (nt > 10) and ('taskrest' in s[12]):
-      if s[13]: # motion corrected
-        info[rest].append({'item': s[2], 'acq': 'corrected'})
-      else:
-        info[rest].append({'item': s[2], 'acq': 'uncorrected'})
+for idx, s in enumerate(seqinfo): # each row of dicominfo.tsv
+    if (s.dim3 == 176) and (s.dim4 == 1) and ('t1' in s.protocol_name):
+      info[t1w] = [s.series_id] # assign if a single scan meets criteria
+    if (11 <= s.dim3 <= 22) and (s.dim4 == 1) and ('dti' in s.protocol_name):
+      info[dwi].append(s.series_id) # append if multiple scans meet criteria
+    if (s.dim4 > 10) and ('taskrest' in s.protocol_name):
+      if not s.is_motion_corrected: # not motion corrected
+        info[rest].append({'item': s.series_id, 'rec': 'uncorrected'})
 ```
 
 - Extract and label if resting state scans are motion corrected
 
 ---
-### Our finished heuristic (`phantom_heuristic.py`)
+### Our finished heuristic (`demo_heuristic.py`)
 
 ```python
 import os
@@ -325,99 +333,35 @@ def create_key(template, outtype=('nii.gz',), annotation_classes=None):
 
 def infotodict(seqinfo):
 
-    t1w = create_key('anat/sub-{subject}_T1w')
-    dwi = create_key('dwi/sub-{subject}_run-{item:01d}_dwi')
-    rest = create_key('func/sub-{subject}_task-rest_acq-{acq}_run-{item:01d}_bold')
+    t1w = create_key('sub-{subject}/anat/sub-{subject}_T1w')
+    dwi = create_key('sub-{subject}/dwi/sub-{subject}_run-{item:01d}_dwi')
+    rest = create_key('sub-{subject}/func/sub-{subject}_task-rest_rec-{rec}_run-{item:01d}_bold')
 
     info = {t1w: [], dwi: [], rest: []}
 
     for s in seqinfo:
-        x, y, sl, nt = (s[6], s[7], s[8], s[9])
-        if (sl == 176) and (nt ==1) and ('t1' in s[12]):
-          info[t1w] = [s[2]] # assign if a single series meets criteria
-        if (11 <= sl <= 22) and (nt == 1) and ('dti' in s[12]):
-          info[dwi].append(s[2]) # append if multiple series meet criteria
-        if (nt > 10) and ('taskrest' in s[12]):
-            if s[13]: # exclude non motion corrected series
-                info[rest].append({'item': s[2], 'acq': 'corrected'})
-            else:
-                info[rest].append({'item': s[2], 'acq': 'uncorrected'})
+        if (s.dim3 == 176) and (s.dim4 == 1) and ('t1' in s.protocol_name):
+          info[t1w] = [s.series_id] # assign if a single series meets criteria
+        if (11 <= s.dim3 <= 22) and (s.dim4 == 1) and ('dti' in s.protocol_name):
+          info[dwi].append(s.series_id) # append if multiple series meet criteria
+        if (s.dim4 > 10) and ('taskrest' in s.protocol_name):
+            if not s.is_motion_corrected:
+                info[rest].append({'item': s.series_id, 'rec': 'uncorrected'})
     return info
 ```
 
 ---
-### Changing our docker command
+
+### Finalize our conversion
 
 ```bash
-docker run --rm -it -v $PWD:/data nipy/heudiconv
--d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
--f /convertall.py -c none -o /data/output
+heudiconv -d "/data/{subject}/*/*/*/*IMA" -s PHANTOM1_3 -f demo_heuristic.py -b -o /output2
 ```
 
----
-### Changing our docker command
-
-```bash
-docker run --rm -it -v $PWD:/data nipy/heudiconv
--d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
--f /data/phantom_heuristic.py -c none -o /data/output
-```
+- Something missing? Double check your `heuristic` and `dicominfo.tsv`!
 
 ---
-### Changing our docker command
 
-```bash
-docker run --rm -it -v $PWD:/data nipy/heudiconv
--d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
--f /data/phantom_heuristic.py -c dcm2niix -o /data/output
-```
-
----
-### Updated docker command
-
-```bash
-docker run --rm -it -v $PWD:/data nipy/heudiconv
--d /data/%s/YAROSLAV_DBIC-TEST1/*/*/*IMA -s PHANTOM1_3
--f /data/phantom_heuristic.py -c dcm2niix -b -o /data/output
-```
-
---
-
-- Clear old output directory
-- Run the docker command!
-- Something missing? Double check your `heuristic` and `dicominfo.txt`!
-
----
-name: extrasteps
-
-### Is it BIDS yet?
-
-Let's check:
-- [In-browser validator](http://incf.github.io/bids-validator) / Command line
-
---
-
-- A change to `heudiconv` will be coming soon that fixes most of these problems
-
- - However, [event files](https://github.com/INCF/BIDS-examples/blob/master/ds001/sub-02/func/sub-02_task-balloonanalogrisktask_run-01_events.tsv) and [participants.tsv](https://github.com/INCF/BIDS-examples/blob/master/ds001/participants.tsv) will still need to be created
-
----
-name: nowwhat
-### Now what?
-
-<img src="assets/bids-apps.png" width="100%" />
-
-???
-
-over 20 apps!
-
-mriqc - runs quality control measures on both structural and functional across either individual or group - outputs reports
-fMRIprep - runs basic preprocessing with reports generated outlining how import steps affected the data
-ALL RUN BECAUSE OF FACILITATION BY BIDS STRUCTURE
-
----
-name: inverse
-layout: true
-class: center, middle, inverse
----
 # Questions?
+
+If something is unclear, or you would like to contribute to this guide, please open an issue or pull request on our [Github repo](https://github.com/nipy/heudiconv)
